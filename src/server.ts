@@ -9,31 +9,30 @@ const PORT = Number(process.env.PORT) || 3000;
 const HOST = '0.0.0.0';
 
 async function start() {
+  const server = app.listen(PORT, HOST, () => {
+    console.log(`Server running on http://${HOST}:${PORT}`);
+  });
+
   try {
     await connectDB();
-
-    const server = app.listen(PORT, HOST, () => {
-      console.log(`Server running on http://${HOST}:${PORT}`);
-    });
-
-    process.on('SIGTERM', async () => {
-      console.log('SIGTERM received. Shutting down gracefully');
-
-      server.close(async () => {
-        try {
-            await mongoose.connection.close();
-            console.log('MongoDB connection closed');
-            process.exit(0);
-        } catch(error) {
-          console.error('Error while closing MongoDB connection:', error);
-          process.exit(1);
-        }
-      });
-    });
-  } catch(error) {
+  } catch (error) {
     console.error('Failed to connect to database:', error);
-    process.exit(1);
   }
+
+  process.on('SIGTERM', async () => {
+    console.log('SIGTERM received. Shutting down gracefully');
+
+    server.close(async () => {
+      try {
+        await mongoose.connection.close();
+        console.log('MongoDB connection closed');
+        process.exit(0);
+      } catch (error) {
+        console.error('Error while closing MongoDB connection:', error);
+        process.exit(1);
+      }
+    });
+  });
 }
 
 start();
