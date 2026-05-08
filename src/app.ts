@@ -16,6 +16,7 @@ app.get('/health', (_req, res) => {
   };
 
   const isConnected = state === 1;
+  const brokenNumber: number = "this is not number";
 
   res.status(isConnected ? 200 : 503).json({
     status: isConnected ? 'ok' : 'error',
