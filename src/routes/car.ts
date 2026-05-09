@@ -9,6 +9,7 @@ import {
   deleteCar,
   getModernCars,
 } from '../storage/car';
+import { requireAuth } from '../middleware/requireAuth';
 
 const router = Router();
 
@@ -103,9 +104,16 @@ router.get('/:id', async (req: Request<IdParam>, res: Response, next: NextFuncti
   }
 );
 
-router.post('/', validate(createCarSchema), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', requireAuth, validate(createCarSchema), async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const newCar = await createCar(req.body);
+      if(!req.userId) {
+        res.status(401).json({
+          message: 'Unauthorized',
+        });
+        return;
+      }
+
+      const newCar = await createCar({...req.body, ownerId: req.userId});
       res.status(201).json(newCar);
     } catch(error) {
       next(error);
@@ -113,16 +121,32 @@ router.post('/', validate(createCarSchema), async (req: Request, res: Response, 
   }
 );
 
-router.patch('/:id', validate(updateCarSchema), async (req: Request<IdParam>, res: Response, next: NextFunction) => {
+router.patch('/:id', requireAuth, validate(updateCarSchema), async (req: Request<IdParam>, res: Response, next: NextFunction) => {
     try {
-      const updatedCar = await updateCar(req.params.id, req.body);
-
-      if(!updatedCar) {
-        res.status(404).json({
-            message: 'Car not found',
+      if (!req.userId) {
+        res.status(401).json({
+          message: 'Unauthorized',
         });
         return;
       }
+
+      const car = await getCarById(req.params.id);
+
+      if(!car) {
+        res.status(404).json({
+          message: 'Car not found',
+        });
+        return;
+      }
+
+      if(car.ownerId.toString() !== req.userId) {
+        res.status(403).json({
+          message: 'Forbidden',
+        });
+        return;
+      }
+
+      const updatedCar = await updateCar(req.params.id, req.body);
 
       res.status(200).json(updatedCar);
     } catch (error) {
@@ -131,18 +155,34 @@ router.patch('/:id', validate(updateCarSchema), async (req: Request<IdParam>, re
   }
 );
 
-router.delete('/:id', async (req: Request<IdParam>, res: Response, next: NextFunction) => {
+router.delete('/:id', requireAuth, async (req: Request<IdParam>, res: Response, next: NextFunction) => {
     try {
-      const deleted = await deleteCar(req.params.id);
-
-      if(!deleted) {
-        res.status(404).json({
-            message: 'Car not found',
+      if(!req.userId) {
+        res.status(401).json({
+          message: 'Unauthorized',
         });
         return;
       }
 
-    res.status(204).send();
+      const car = await getCarById(req.params.id);
+
+      if(!car) {
+        res.status(404).json({
+          message: 'Car not found',
+        });
+        return;
+      }
+
+      if(car.ownerId.toString() !== req.userId) {
+        res.status(403).json({
+          message: 'Forbidden',
+        });
+        return;
+      }
+
+      await deleteCar(req.params.id);
+
+      res.status(204).send();
     } catch(error) {
       next(error);
     }
