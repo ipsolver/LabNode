@@ -1,9 +1,14 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import carRouter from './routes/car';
+import authRouter from './routes/auth';
 import { errorHandler } from './middleware/errorHandler';
+import cookieParser from 'cookie-parser';
 
 const app = express();
+
+app.use(cookieParser());
+app.use(express.json());
 
 app.get('/health', (_req, res) => {
   const state = mongoose.connection.readyState;
@@ -23,7 +28,7 @@ app.get('/health', (_req, res) => {
   });
 });
 
-app.use(express.json());
+app.use('/auth', authRouter);
 app.use('/api/cars', carRouter);
 app.use(errorHandler);
 
