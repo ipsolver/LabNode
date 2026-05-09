@@ -19,6 +19,7 @@ export type UpdateCarDTO = z.infer<typeof updateCarSchema>;
 
 export type Car = CreateCarDTO & {
   id: string;
+  ownerId: string;
   createdAt: Date;
   updatedAt: Date;
 };
