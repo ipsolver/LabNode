@@ -1,3 +1,5 @@
+process.env.JWT_SECRET = 'test_jwt_secret';
+
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
