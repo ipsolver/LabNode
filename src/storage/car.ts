@@ -13,7 +13,11 @@ type GetAllCarsOptions = {
   limit?: number;
 };
 
-function buildCreatePayload(data: CreateCarDTO) {
+type CreateCarWithOwnerDTO = CreateCarDTO & {
+  ownerId: string;
+};
+
+function buildCreatePayload(data: CreateCarWithOwnerDTO) {
   const payload: {
     name: string;
     brand: string;
@@ -21,6 +25,7 @@ function buildCreatePayload(data: CreateCarDTO) {
     year: number;
     transmission: 'manual' | 'automatic';
     price: number;
+    ownerId: string;
     description?: string;
   } = {
     name: data.name,
@@ -29,6 +34,7 @@ function buildCreatePayload(data: CreateCarDTO) {
     year: data.year,
     transmission: data.transmission,
     price: data.price,
+    ownerId: data.ownerId,
   };
 
   if (data.description !== undefined) {
@@ -128,7 +134,7 @@ export async function getCarById(id: string) {
   return CarModel.findById(id).lean({ virtuals: true });
 }
 
-export async function createCar(data: CreateCarDTO) {
+export async function createCar(data: CreateCarWithOwnerDTO) {
   const payload = buildCreatePayload(data);
   const createdCar = new CarModel(payload);
   const savedCar = await createdCar.save();
