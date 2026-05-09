@@ -1,4 +1,4 @@
-import { Schema, model, HydratedDocument } from 'mongoose';
+import { Schema, model, HydratedDocument, Types } from 'mongoose';
 
 const currentYear = new Date().getFullYear();
 
@@ -7,6 +7,7 @@ export interface Car {
   brand: string;
   model: string;
   year: number;
+  ownerId: Types.ObjectId;
   transmission: 'manual' | 'automatic';
   price: number;
   description?: string;
@@ -52,6 +53,12 @@ const carSchema = new Schema<Car>(
         validator: Number.isInteger,
         message: 'Year must be an integer',
       },
+    },
+    ownerId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Owner is required'],
+      index: true,
     },
     transmission: {
       type: String,
